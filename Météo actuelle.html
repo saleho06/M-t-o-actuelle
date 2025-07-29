@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Météo actuelle</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #e0f7fa;
+      color: #00796b;
+      text-align: center;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #004d40;
+    }
+    input {
+      padding: 8px;
+      font-size: 1em;
+      width: 80%;
+      margin: 6px 0;
+      border: 1px solid #00796b;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 1em;
+      background-color: #00796b;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    button:hover {
+      background-color: #004d40;
+    }
+    .weather-card {
+      border: 1px solid #00796b;
+      border-radius: 6px;
+      padding: 15px;
+      margin: 12px 0;
+      background: #ffffffcc;
+      text-align: left;
+    }
+    .temp {
+      font-weight: bold;
+      font-size: 1.5em;
+      color: #b85c00;
+    }
+    .desc {
+      font-style: italic;
+      color: #004d40;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Météo actuelle</h1>
+  <p>Entrez le nom de ville :</p>
+
+  <input type="text" id="city" placeholder="Ville " />
+
+
+  <button id="getWeatherBtn">Afficher la météo</button>
+
+  <div id="weatherResults"></div>
+
+  <script>
+    const apiKey = 'ed071787a52b1cd2005be9fdf7301303'; // Remplacez par votre clé API OpenWeatherMap
+
+    async function getWeather(city) {
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&appid=${apiKey}&lang=fr`;
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Ville "${city}" non trouvée.`);
+        }
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        return { error: error.message, city };
+      }
+    }
+
+    function createWeatherCard(data) {
+      if (data.error) {
+        return `<div class="weather-card error">Erreur pour <strong>${data.city}</strong>: ${data.error}</div>`;
+      }
+      return `
+        <div class="weather-card">
+          <h2>${data.name}, ${data.sys.country}</h2>
+          <div class="temp">${data.main.temp} °C</div>
+          <div class="desc">${data.weather[0].description}</div>
+          <div>Humidité : ${data.main.humidity}%</div>
+          <div>Vent : ${data.wind.speed} m/s</div>
+        </div>
+      `;
+    }
+
+    document.getElementById('getWeatherBtn').addEventListener('click', async () => {
+      const cities = [
+        document.getElementById('city').value.trim(),
+
+      ].filter(c => c !== '');
+
+      if (cities.length === 0) {
+        alert('Veuillez entrer au moins une ville.');
+        return;
+      }
+
+      document.getElementById('weatherResults').innerHTML = 'Chargement...';
+
+      const promises = cities.map(city => getWeather(city));
+      const results = await Promise.all(promises);
+
+      const htmlResults = results.map(data => createWeatherCard(data)).join('');
+      document.getElementById('weatherResults').innerHTML = htmlResults;
+    });
+  </script>
+
+</body>
+</html>
